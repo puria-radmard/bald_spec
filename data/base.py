@@ -39,7 +39,6 @@ class ActiveLearningDataLoaderBase(ABC):
         self.labels[indices] = new_labels
         self.querying_indices.remove(set(indices))
         self.training_indices.add(set(indices))
-        import pdb; pdb.set_trace()
     
     def __iter__(self):
         if self.training:
@@ -50,7 +49,7 @@ class ActiveLearningDataLoaderBase(ABC):
             indices = list(self.querying_indices)
             bs = self.querying_batch_size
 
-        for i in range(self.num_bathes):
+        for i in range(self.num_batches):
             batch_indices = indices[i*bs:(i+1)*bs]
             batch = {'data': self.data[batch_indices]}
             if self.training:

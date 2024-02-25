@@ -29,16 +29,22 @@ class NoiseModelBase(ABC):
         raise NotImplementedError
 
     def log_likelihood(self, labels: _T, regression_evaluation: _T) -> _T:
-        import pdb; pdb.set_trace()
-        assert labels.shape == regression_evaluation.shape, "labels y and evaluations f(x) should exist in the same space!"
+        """
+        labels of shape [batch, output dimensionality]
+        regression_evaluation of shape [batch, I, output dimensionality]
+
+        returns of shape [batch, I], as one would expect
+        """
+        assert self.data_dimensionality == labels.shape[-1] == regression_evaluation.shape[-1], "labels y and evaluations f(x) should exist in the same space!"
+        assert len(labels.shape) == 2 and len(regression_evaluation.shape) == 3
         dist = self.instantiate_distribution(regression_evaluation)
-        return dist.log_prob(labels)
+        return dist.log_prob(labels.unsqueeze(1)).sum(-1)
     
     def sample_output(self, sample_num: int, regression_evaluation: _T) -> _T:
         "Tacks dimension to end of tensor"
         assert regression_evaluation.shape[-1] == self.data_dimensionality
         dist = self.instantiate_distribution(regression_evaluation)
-        return dist.sample([sample_num]).movedim(0, -1)
+        return dist.sample([sample_num]).movedim(0, -2) # Keep final dimension as the data dimensionality!
 
 
 class UnitRateGammaNoiseModel(NoiseModelBase):

@@ -16,8 +16,9 @@ class HypothesisSpaceBase:
         return samples
 
     def log_prior(self, thetas: _T) -> _T:
-        import pdb; pdb.set_trace(header = 'proof some shapes here')
-        return self.prior.log_prob(thetas)
+        assert list(thetas.shape) == [thetas.shape[0], self.dimensionality]
+        return self.prior.log_prob(thetas).sum(-1)  # [len(thetas)]
 
     def __contains__(self, theta: _T):
+        assert len(theta.shape) == 2
         return self.prior.support.check(theta).all()

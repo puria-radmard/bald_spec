@@ -1,4 +1,4 @@
-# Bayesian Active Learning by Disagreement for Spectrography
+# Bayesian Active Learning by Disagreement for Spectroscopy
 
 [![BALD!](http://img.youtube.com/vi/RBlRmwRVBpM/0.jpg)](https://www.youtube.com/watch?v=RBlRmwRVBpM "Video Title")
 

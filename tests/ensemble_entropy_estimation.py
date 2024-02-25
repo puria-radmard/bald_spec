@@ -47,7 +47,6 @@ for K_i in tqdm(K_is):
 x_lim = ax_hists.get_xlim()
 x_min = max(x_lim[0], 0.0)
 test_ys = torch.linspace(x_min, x_lim[1], 100)
-import pdb; pdb.set_trace()
 test_pys = data_liklihood_ensemble.log_prob(test_ys).exp().mean(0)
 ax_hists.plot(test_ys.numpy(), test_pys.numpy(), label = 'True ensemble prediction')
 ax_hists.legend(title = f"$I = {I}, K_i = ?$")

@@ -20,3 +20,6 @@
     - Assume a Gaussian posterior over $\alpha$, the shape parameter of the Gamma, which is also the mean if $\beta$, the rate, is 1. NB: this is a posterior over $f(x^\star|\theta)$, not $\theta$ itself! We're just doing tests right now...
     - Assume a noise model of $p(y^\star|\theta^{(i)}, x^\star) = \mathcal{G}(y^\star | f(x^\star|\theta), 1)$
 
+
+
+

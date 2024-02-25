@@ -40,5 +40,5 @@ class JExcitonModel(NonLinearRegressionModelBase):
         amplitudes = theta[...,:self.J].unsqueeze(0).unsqueeze(-1).exp()
         time_constants = theta[...,self.J:].unsqueeze(0).unsqueeze(-1).exp()
         data = x.unsqueeze(1).unsqueeze(-1).repeat(1, 1, self.J, 1)
-        comps = amplitudes * (-data / time_constants).exp() # [num theta, num data, J, 1]
+        comps = amplitudes * (-data / time_constants).exp() # [num data, num theta, J, 1]
         return comps.sum(2)

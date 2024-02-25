@@ -15,8 +15,8 @@ num_hypothesis = 400
 
 # What we will infer... but just simulate from for now
 J = 1
-prior = Normal(loc = torch.tensor([1000.0, 200.0]).log(), scale = torch.tensor([0.1, 0.1]))
-true_hypothesis_space = HypothesisSpaceBase(prior = prior, dimensionality=2*J) # Ae^{-x/tau} where x is first then tau
+true_distribution = Normal(loc = torch.tensor([1000.0, 200.0]).log(), scale = torch.tensor([0.1, 0.1]))
+true_hypothesis_space = HypothesisSpaceBase(prior = true_distribution, dimensionality=2*J) # Ae^{-x/tau} where x is first then tau
 reg_model = JExcitonModel(J=J)
 noise_model = UnitRateGammaNoiseModel()
 
@@ -32,17 +32,19 @@ data_loader = SimulatedDataLoader(
 )
 
 
-fig, [ax_data, ax_params] = plt.subplots(1, 2, figsize = (6, 3))
+if __name__ == '__main__':
 
-x = data_loader.data.squeeze().numpy()
-y = data_loader.labels.squeeze().numpy()
-c = data_loader.selected_hypotheses.numpy() / num_hypothesis
-thetas = data_loader.thetas.numpy()
-ax_data.scatter(x, y, c=c, s=3)
+    fig, [ax_data, ax_params] = plt.subplots(1, 2, figsize = (6, 3))
 
-ax_params.scatter(*thetas.T, c = torch.arange(num_hypothesis).numpy() / num_hypothesis)
-ax_params.set_xlabel('log(A)')
-ax_params.set_ylabel('log(tau)')
+    x = data_loader.data.squeeze().numpy()
+    y = data_loader.labels.squeeze().numpy()
+    c = data_loader.selected_hypotheses.numpy() / num_hypothesis
+    thetas = data_loader.thetas.numpy()
+    ax_data.scatter(x, y, c=c, s=3)
 
-fig.savefig('tests/simulated_data.png')
+    ax_params.scatter(*thetas.T, c = torch.arange(num_hypothesis).numpy() / num_hypothesis)
+    ax_params.set_xlabel('log(A)')
+    ax_params.set_ylabel('log(tau)')
+
+    fig.savefig('tests/simulated_data.png')
 
