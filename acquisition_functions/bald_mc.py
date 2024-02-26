@@ -24,9 +24,9 @@ class BALDMCAcquisitionFunction(AcquisitionFunctionBase):
 
         # Monte Carlo in the output space at each testpoint - i.e. a sample from each ensemble member (one sample from H)
         # Then get their logprobs and follow the BALD first term to get the entropy of the full ensemble
-        sampled_noisy_testpoint_labels = self.noise_model.sample_output(self.K_i, function_eval)   # [K_i, B, I, dim out]
-        evaluated_loglikelihoods = self.noise_model.log_likelihood_many(sampled_noisy_testpoint_labels, function_eval)
-        entropy_of_ensemble = - evaluated_loglikelihoods.exp().mean(0).log().mean(1)
+        sampled_noisy_testpoint_labels = self.noise_model.sample_output(self.K_i, function_eval)   # [B, K_i, I, dim out]
+        evaluated_loglikelihoods = self.noise_model.log_likelihood_outer(sampled_noisy_testpoint_labels, function_eval)
+        entropy_of_ensemble = - evaluated_loglikelihoods.exp().mean(1).log().mean(-1)   
 
         # Second term is much easier!
         mean_of_entropies = self.noise_model.ensemble_entropies(function_eval).sum(-1).mean(1)
@@ -35,7 +35,7 @@ class BALDMCAcquisitionFunction(AcquisitionFunctionBase):
 
         return {
             'scores': bald_scores, 
-            'sampled_noisy_testpoint_labels': sampled_noisy_testpoint_labels.moveaxis(1, 0) # Can be used for plotting, but the first axis needs to be batch size...
+            'sampled_noisy_testpoint_labels': sampled_noisy_testpoint_labels
         }
 
          

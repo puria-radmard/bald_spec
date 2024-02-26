@@ -30,7 +30,7 @@ data_loader = SimulatedDataLoader(
     noise_model=noise_model,
     num_hypothesis=num_hypothesis,
     training_batch_size=1000,   # Easy peasy
-    querying_batch_size=128, # Not so easy peasy...
+    querying_batch_size=64, # Not so easy peasy...
     initial_labelled_dataset_size=starting_dataset,
 )
 

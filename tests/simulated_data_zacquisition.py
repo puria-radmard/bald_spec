@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from tests.simulated_data_inference import mcmc_obj, data_loader, noise_model, reg_model
 from acquisition_functions import RandomAcquisitionFunction, BALDMCAcquisitionFunction
 
-acquisition_method = 'random'
+acquisition_method = 'bald'
 
 if acquisition_method == 'bald':
     acquisition_function = BALDMCAcquisitionFunction(
@@ -19,8 +19,8 @@ elif acquisition_method == 'random':
 num_acquisition_rounds = 50
 num_data_points_per_acquision_round = 5
 
-num_steps = 256
-num_chains = 4
+num_steps = 128
+num_chains = 2
 initial_parameter_samples = None
 initial_parameter_unnormalised_log_posterior = None
 
@@ -67,6 +67,6 @@ for t in tqdm(range(num_acquisition_rounds)):
         label = f"MCMC Mean-AP approximation after {t} acquisition rounds"
     )
     
-    fig.savefig(f'tests/test_images/function_over_acquisitions_{acquisition_method}.png')
+    fig.savefig(f'tests/test_images/{acquisition_method}_acquisition/state_after_{t}_rounds.png')
 
 
