@@ -4,6 +4,8 @@ import numpy as np
 from torch import distributions as d
 import  matplotlib.pyplot as plt
 
+raise Exception('MAke this evaluate from BALD class instead!')
+
 # Setup
 fig, [ax_hists, ax_convergence] = plt.subplots(1, 2, figsize = (20, 10))
 all_balds = []
@@ -22,12 +24,12 @@ data_liklihood_ensemble = d.Gamma(sampled_hypotheses, torch.ones_like(sampled_hy
 
 for K_i in tqdm(K_is):
 
-    sampled_noisy_testpoint_likelihoods = data_liklihood_ensemble.sample([K_i])         # [K_i, I, B]
-    B = sampled_noisy_testpoint_likelihoods.shape[-1]
+    sampled_noisy_testpoint_labels = data_liklihood_ensemble.sample([K_i])         # [K_i, I, B]
+    B = sampled_noisy_testpoint_labels.shape[-1]
 
     # All of these are effectively sampled from q(y) (see README)
     # For each of these points, we have to evaluate q(y), which consts of a log(sum(p_i))
-    evaluated_loglikelihoods = data_liklihood_ensemble.log_prob(sampled_noisy_testpoint_likelihoods.reshape(-1, 1, B))    # [K_i * I, I, B]
+    evaluated_loglikelihoods = data_liklihood_ensemble.log_prob(sampled_noisy_testpoint_labels.reshape(-1, 1, B))    # [K_i * I, I, B]
 
     # Follow equation to get this
     entropy_of_ensemble = - evaluated_loglikelihoods.exp().mean(1).log().mean(0)
@@ -41,7 +43,7 @@ for K_i in tqdm(K_is):
 
     # How good is the y-space MC at approximating q?
     num_bins = 50
-    ax_hists.hist(sampled_noisy_testpoint_likelihoods.flatten().numpy(), num_bins, histtype=u'step', density = True, alpha = 0.2, label = K_i)
+    ax_hists.hist(sampled_noisy_testpoint_labels.flatten().numpy(), num_bins, histtype=u'step', density = True, alpha = 0.2, label = K_i)
 
 
 x_lim = ax_hists.get_xlim()
@@ -56,4 +58,4 @@ ax_convergence.set_xlabel('K_i')
 ax_convergence.set_ylabel('Test BALD score')
 ax_convergence.set_xscale('log', base = 2)
 
-fig.savefig('tests/ensemble_entropy_estimation.png')
+fig.savefig('tests/test_images/ensemble_entropy_estimation.png')

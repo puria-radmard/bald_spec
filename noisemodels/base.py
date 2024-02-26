@@ -39,12 +39,29 @@ class NoiseModelBase(ABC):
         assert len(labels.shape) == 2 and len(regression_evaluation.shape) == 3
         dist = self.instantiate_distribution(regression_evaluation)
         return dist.log_prob(labels.unsqueeze(1)).sum(-1)
+
+    def log_likelihood_many(self, sampled_ensemble_labels: _T, regression_evaluation: _T) -> _T:
+        """
+        Bespoke version of self.log_likelihood for the sake of the ensemble MC BALD estimator
+
+        sampled_ensemble_labels now of shape [K_i (number of samples from each ensemble member), batch, I, output dimensionality]
+        """
+        assert self.data_dimensionality == sampled_ensemble_labels.shape[-1] == regression_evaluation.shape[-1], "sampled_ensemble_labels y and evaluations f(x) should exist in the same space!"
+        assert len(sampled_ensemble_labels.shape) == 4 and len(regression_evaluation.shape) == 3
+        B = sampled_ensemble_labels.shape[1]
+        dist = self.instantiate_distribution(regression_evaluation)
+        return dist.log_prob(sampled_ensemble_labels).sum(-1)
     
     def sample_output(self, sample_num: int, regression_evaluation: _T) -> _T:
         "Tacks dimension to end of tensor"
         assert regression_evaluation.shape[-1] == self.data_dimensionality
         dist = self.instantiate_distribution(regression_evaluation)
-        return dist.sample([sample_num]).movedim(0, -2) # Keep final dimension as the data dimensionality!
+        return dist.sample([sample_num]) # dim appended to start of shape!
+
+    def ensemble_entropies(self, regression_evaluation: _T) -> _T:
+        assert regression_evaluation.shape[-1] == self.data_dimensionality
+        dist = self.instantiate_distribution(regression_evaluation)
+        return dist.entropy()
 
 
 class UnitRateGammaNoiseModel(NoiseModelBase):

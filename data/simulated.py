@@ -60,11 +60,11 @@ class SimulatedDataLoader(ActiveLearningDataLoaderBase):
         mean_output = reg_model.evaluate_f(input_data, thetas)  # [B, I, data dim (1)]
 
         # Add noise to the model
-        actual_output = noise_model.sample_output(1, mean_output)      # [B, num_hypothesis, data dim (1), num noise samples (1)]
+        actual_output = noise_model.sample_output(1, mean_output)      # [num noise samples (1), B, num_hypothesis, data dim (1)]
 
         # Randomly select from hypotheses - this is bespoke to this class
         selected_hypotheses = torch.randint(0, num_hypothesis, [input_data.shape[0]])
-        selected_outputs = actual_output.squeeze(-1)[range(len(selected_hypotheses)), selected_hypotheses]
+        selected_outputs = actual_output.squeeze(0)[range(len(selected_hypotheses)), selected_hypotheses]
         
         self.selected_hypotheses = selected_hypotheses
         self.thetas = thetas

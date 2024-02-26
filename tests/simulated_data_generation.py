@@ -10,7 +10,8 @@ from noisemodels.base import UnitRateGammaNoiseModel
 import matplotlib.pyplot as plt
 
 # Data generation parameters
-xs = torch.linspace(0.1, 1000, 50000).reshape(-1, 1)
+xs = torch.linspace(0.1, 1000, 1000).reshape(-1, 1) 
+xs = (xs + torch.randn_like(xs) * 0.001).clip(min = 0.0)
 num_hypothesis = 400
 
 # What we will infer... but just simulate from for now
@@ -20,15 +21,17 @@ true_hypothesis_space = HypothesisSpaceBase(prior = true_distribution, dimension
 reg_model = JExcitonModel(J=J)
 noise_model = UnitRateGammaNoiseModel()
 
+starting_dataset = 5    # Start with 5 datapoints
+
 data_loader = SimulatedDataLoader(
     input_data = xs, 
     true_hypothesis_space=true_hypothesis_space,
     reg_model=reg_model,
     noise_model=noise_model,
     num_hypothesis=num_hypothesis,
-    training_batch_size=100,         # just collect them all
-    querying_batch_size=9900,
-    initial_labelled_dataset_size=100,
+    training_batch_size=1000,   # Easy peasy
+    querying_batch_size=128, # Not so easy peasy...
+    initial_labelled_dataset_size=starting_dataset,
 )
 
 

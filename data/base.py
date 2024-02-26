@@ -34,11 +34,10 @@ class ActiveLearningDataLoaderBase(ABC):
         self.training = False
         self.num_batches = ceil(len(self.querying_indices) / self.querying_batch_size)
 
-    def __setitem__(self, indices: List[int], new_labels: _T):
+    def label(self, indices: List[int]):
         assert not self.training, "Cannot update labelled set, use self.querying() first"
-        self.labels[indices] = new_labels
-        self.querying_indices.remove(set(indices))
-        self.training_indices.add(set(indices))
+        self.querying_indices = self.querying_indices - set(indices.tolist())
+        self.training_indices.update(set(indices.tolist()))
     
     def __iter__(self):
         if self.training:

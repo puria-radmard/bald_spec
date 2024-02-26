@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from typing import Union
 
 import torch
@@ -54,12 +56,11 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
         u_per_chain = torch.rand_like(acceptance_probabilities)
         accepted_indicators = u_per_chain <= acceptance_probabilities
 
-        actual_next_hypotheses = previous_hypotheses
-        actual_next_hypotheses[accepted_indicators] = proposed_hypotheses
+        actual_next_hypotheses = previous_hypotheses.clone()
+        actual_next_hypotheses[accepted_indicators] = proposed_hypotheses[accepted_indicators]
 
-        actual_next_unnormalised_log_posterior = initial_unnormalised_log_posterior
-        actual_next_unnormalised_log_posterior[accepted_indicators] = proposed_hypothesis_unnormalised_log_posterior
-        import pdb; pdb.set_trace()
+        actual_next_unnormalised_log_posterior = initial_unnormalised_log_posterior.clone()
+        actual_next_unnormalised_log_posterior[accepted_indicators] = proposed_hypothesis_unnormalised_log_posterior[accepted_indicators]
 
         return {
             'actual_next_step': actual_next_hypotheses, # [num chains, dim(H)]
@@ -67,7 +68,7 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
             'accepted_indicators': accepted_indicators, # [num chains], used for logging...
         }
 
-    def step_sample(self, initial_hypotheses=None, num_chains=None, initial_unnormalised_log_posterior=None, *args, **kwargs):
+    def step_sample(self, initial_hypotheses=None, num_chains=None, initial_unnormalised_log_posterior=None):
         initial_hypotheses, num_chains = self.initialise_chains(initial_hypotheses, num_chains) # Checks that theta shaped [num_chains, dim(H)]
 
         # self.evaluate_unnormalised_log_posterior(thetas)
@@ -88,5 +89,32 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
             'next_hypotheses': actual_next_step_dict['actual_next_step'],                                       # [num chains, dim(H)]
             'next_unnormalised_log_posterior': actual_next_step_dict['actual_next_unnormalised_log_posterior'], # [num chains]
             'accepted_indicators': actual_next_step_dict['accepted_indicators'],                                # [num chains], used for logging...
+        }
+
+    def sample_many(self, num_steps: int, initial_hypotheses = None, num_chains = None, initial_unnormalised_log_posterior = None):
+
+        all_hypotheses = [initial_hypotheses]
+        all_unnormalised_log_posterior = [initial_unnormalised_log_posterior]
+        all_accepted_indicators = []
+
+        for ns in tqdm(range(num_steps)):
+            next_sample_info = self.step_sample(
+                initial_hypotheses=all_hypotheses[-1],
+                num_chains=num_chains if ns == 0 else None,
+                initial_unnormalised_log_posterior=all_unnormalised_log_posterior[-1]
+            )
+            all_hypotheses.append(next_sample_info['next_hypotheses'])
+            all_unnormalised_log_posterior.append(next_sample_info['next_unnormalised_log_posterior'])
+            all_accepted_indicators.append(next_sample_info['accepted_indicators'])
+
+        if initial_hypotheses is None:
+            all_hypotheses = all_hypotheses[1:]
+        if initial_unnormalised_log_posterior is None:
+            all_unnormalised_log_posterior = all_unnormalised_log_posterior[1:]
+
+        return {
+            'all_samples': torch.stack(all_hypotheses, dim = 0),                                        # [num steps (/+1), num chains, dim(H)]
+            'all_unnormalised_log_posterior': torch.stack(all_unnormalised_log_posterior, dim = 0),     # [num steps (//+1), num chains]
+            'all_accepted_indicators': torch.stack(all_accepted_indicators, dim = 0),                   # [num steps, num chains]
         }
 

@@ -1,3 +1,4 @@
+import torch
 from torch import Tensor as _T
 from abc import ABC
 
@@ -40,5 +41,5 @@ class JExcitonModel(NonLinearRegressionModelBase):
         amplitudes = theta[...,:self.J].unsqueeze(0).unsqueeze(-1).exp()
         time_constants = theta[...,self.J:].unsqueeze(0).unsqueeze(-1).exp()
         data = x.unsqueeze(1).unsqueeze(-1).repeat(1, 1, self.J, 1)
-        comps = amplitudes * (-data / time_constants).exp() # [num data, num theta, J, 1]
+        comps = 1e-10 + amplitudes * (-data / time_constants).exp() # [num data, num theta, J, 1]
         return comps.sum(2)

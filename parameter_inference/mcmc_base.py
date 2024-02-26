@@ -47,7 +47,25 @@ class ParameterMCMCBase(ABC):
         *args, 
         **kwargs
     ) -> Dict[str, _T]:
-        "Should return a dictionary, with one of the keys being 'next_hypotheses'"
+        """
+        Should return a dictionary, with one of the keys being 'next_hypotheses'
+        It is important that this one is shaped [num_chains, dim(H)]
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def sample_many(
+        self, 
+        num_steps: int,
+        initial_hypotheses: Union[_T, None],    # if not provided, an initial theta will be sampled from the hypothesis space <num_chains> times
+        num_chains: Union[int, None],
+        *args, 
+        **kwargs
+    ) -> Dict[str, _T]:
+        """
+        Should return a dictionary, with one of the keys being 'all_samples'
+        It is important that this one is shaped [num_steps, num_chains, dim(H)]
+        """
         raise NotImplementedError
 
     def evaluate_unnormalised_log_posterior(
