@@ -28,7 +28,7 @@ class AcquisitionFunctionBase(ABC):
     ) -> _T:
 
         data_loader.querying()
-        all_scores = []
+        all_scores_dicts = []
         all_indices = []
 
         for unlabelled_batch in tqdm(data_loader, total = data_loader.num_batches, disable=not use_tqdm):
@@ -36,11 +36,14 @@ class AcquisitionFunctionBase(ABC):
             data = unlabelled_batch['data']                                   # [B, dim_in]
             indices = unlabelled_batch['indices']     
 
-            new_scores = self.evaluate_function_on_batch(data, *args, **kwargs)
-            all_scores.append(new_scores)
+            new_scores_dict = self.evaluate_function_on_batch(data, *args, **kwargs)
+            all_scores_dicts.append(new_scores_dict)
             all_indices.append(torch.tensor(indices))
 
-        return (
-            torch.concat(all_scores, 0),
-            torch.concat(all_indices, 0)
-        )
+        ret = {'indices': torch.concat(all_indices, 0)}
+        for k in new_scores_dict.keys():
+            ret[k] = torch.concat([d[k] for d in all_scores_dicts], 0)
+
+        assert 'scores' in ret.keys()
+
+        return ret

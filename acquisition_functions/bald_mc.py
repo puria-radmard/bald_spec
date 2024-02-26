@@ -33,7 +33,10 @@ class BALDMCAcquisitionFunction(AcquisitionFunctionBase):
 
         bald_scores = entropy_of_ensemble - mean_of_entropies
 
-        return bald_scores
+        return {
+            'scores': bald_scores, 
+            'sampled_noisy_testpoint_labels': sampled_noisy_testpoint_labels.moveaxis(1, 0) # Can be used for plotting, but the first axis needs to be batch size...
+        }
 
          
 
