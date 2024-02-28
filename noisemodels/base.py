@@ -6,6 +6,8 @@ from torch.distributions import Distribution as _D
 from typing import Type
 from abc import ABC, abstractmethod
 
+__all__ = ['UnitRateGammaNoiseModel']
+
 
 class NoiseModelBase(ABC):
     """

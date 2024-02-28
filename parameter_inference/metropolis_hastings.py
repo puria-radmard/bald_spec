@@ -6,7 +6,7 @@ import torch
 from torch.distributions import Normal
 
 from parameter_inference.mcmc_base import ParameterMCMCBase
-from nonlinearregression.hypothesis_space import HypothesisSpaceBase as _H
+from hypothesis_space.hypothesis_space import HypothesisSpaceBase as _H
 
 class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
 
@@ -25,15 +25,14 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
         assert proposed in self.hypothesis_space        # so enforce [num_chains, dim(H)]
         return proposed
 
-    def acceptance_probs(self, previous_hypotheses, proposed_hypotheses, initial_unnormalised_log_posterior=None):
+    def acceptance_probs(self, previous_hypotheses, proposed_hypotheses):
         """
         previous_hypotheses, proposed_hypotheses of shape [num chains, dim(H)]
         initial_unnormalised_log_posterior (if given) of shape [num chains]
 
         acceptance_probabilities of shape [num chains] also, and things are super easy for the homoskedastic Gaussian case
         """
-        if initial_unnormalised_log_posterior is None:
-            initial_unnormalised_log_posterior = self.evaluate_unnormalised_log_posterior(previous_hypotheses)
+        initial_unnormalised_log_posterior = self.evaluate_unnormalised_log_posterior(previous_hypotheses)
         proposed_hypothesis_unnormalised_log_posterior = self.evaluate_unnormalised_log_posterior(proposed_hypotheses)
 
         acceptance_probabilities = (proposed_hypothesis_unnormalised_log_posterior - initial_unnormalised_log_posterior).exp().clip(max = 1.0)
@@ -68,14 +67,14 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
             'accepted_indicators': accepted_indicators, # [num chains], used for logging...
         }
 
-    def step_sample(self, initial_hypotheses=None, num_chains=None, initial_unnormalised_log_posterior=None):
+    def step_sample(self, initial_hypotheses=None, num_chains=None):
         initial_hypotheses, num_chains = self.initialise_chains(initial_hypotheses, num_chains) # Checks that theta shaped [num_chains, dim(H)]
 
         # self.evaluate_unnormalised_log_posterior(thetas)
         proposed_next_step = self.propose(initial_hypotheses)
 
         # We may already have the unnormalised log posterior at that point, so no point reevaluating it!
-        acceptance_probs_dict = self.acceptance_probs(initial_hypotheses, proposed_next_step, initial_unnormalised_log_posterior)
+        acceptance_probs_dict = self.acceptance_probs(initial_hypotheses, proposed_next_step)
 
         actual_next_step_dict = self.accept_or_reject(
             previous_hypotheses = initial_hypotheses, 
@@ -91,26 +90,23 @@ class ParameterHomoskedasticGaussianMetropolisHastings(ParameterMCMCBase):
             'accepted_indicators': actual_next_step_dict['accepted_indicators'],                                # [num chains], used for logging...
         }
 
-    def sample_many(self, num_steps: int, initial_hypotheses = None, num_chains = None, initial_unnormalised_log_posterior = None):
+    def sample_many(self, num_steps: int, initial_hypotheses = None, num_chains = None):
 
         all_hypotheses = [initial_hypotheses]
-        all_unnormalised_log_posterior = [initial_unnormalised_log_posterior]
+        all_unnormalised_log_posterior = [None]
         all_accepted_indicators = []
 
         for ns in tqdm(range(num_steps)):
             next_sample_info = self.step_sample(
                 initial_hypotheses=all_hypotheses[-1],
                 num_chains=num_chains if ns == 0 else None,
-                initial_unnormalised_log_posterior=all_unnormalised_log_posterior[-1]
             )
             all_hypotheses.append(next_sample_info['next_hypotheses'])
             all_unnormalised_log_posterior.append(next_sample_info['next_unnormalised_log_posterior'])
             all_accepted_indicators.append(next_sample_info['accepted_indicators'])
 
-        if initial_hypotheses is None:
-            all_hypotheses = all_hypotheses[1:]
-        if initial_unnormalised_log_posterior is None:
-            all_unnormalised_log_posterior = all_unnormalised_log_posterior[1:]
+        all_hypotheses = all_hypotheses[1:]                                 # i.e. discard initial sample even if it was provided...
+        all_unnormalised_log_posterior = all_unnormalised_log_posterior[1:]
 
         return {
             'all_samples': torch.stack(all_hypotheses, dim = 0),                                        # [num steps (/+1), num chains, dim(H)]

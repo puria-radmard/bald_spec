@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from torch import Tensor as _T
 
 from data.base import ActiveLearningDataLoaderBase as _DL
-from nonlinearregression.hypothesis_space import HypothesisSpaceBase as _H
+from hypothesis_space.hypothesis_space import HypothesisSpaceBase as _H
 from nonlinearregression.mean_fit import NonLinearRegressionModelBase as _NL
 from noisemodels.base import NoiseModelBase as _NM
 
@@ -74,7 +74,7 @@ class ParameterMCMCBase(ABC):
     ):
         result = self.hypothesis_space.log_prior(thetas)                         # [num theta]
 
-        self.data_loader.train()
+        self.data_loader.set_data_mode('train')
         for training_batch in self.data_loader:
             
             data = training_batch['data']                                   # [B, dim_in]

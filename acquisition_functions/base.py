@@ -27,7 +27,7 @@ class AcquisitionFunctionBase(ABC):
         *args, **kwargs,
     ) -> _T:
 
-        data_loader.querying()
+        data_loader.set_data_mode('query')
         all_scores_dicts = []
         all_indices = []
 

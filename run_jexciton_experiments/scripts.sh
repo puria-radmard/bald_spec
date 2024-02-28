@@ -1,0 +1,1 @@
+python -m run_jexciton_experiments.main --save_path run_jexciton_experiments/results/simulated_data/J2 --acquisition_method bald simulated
